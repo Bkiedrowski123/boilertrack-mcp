@@ -348,5 +348,30 @@ app.options('*', (req, res) => {
 
 app.get('/health', (req, res) => res.json({ status: 'ok', service: 'boilertrack-mcp' }));
 
+// Tell Claude this server requires no OAuth
+app.get('/.well-known/oauth-protected-resource', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.json({
+    resource: `https://${req.get('host')}`,
+    authorization_servers: []
+  });
+});
+
+app.get('/.well-known/oauth-authorization-server', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.json({
+    issuer: `https://${req.get('host')}`,
+    token_endpoint: `https://${req.get('host')}/token`,
+    response_types_supported: [],
+    grant_types_supported: []
+  });
+});
+
+// No-op token endpoint
+app.post('/token', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.json({ access_token: 'no-auth', token_type: 'bearer' });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`BoilerTrack MCP Server running on port ${PORT}`));
